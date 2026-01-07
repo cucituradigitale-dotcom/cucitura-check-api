@@ -14,6 +14,20 @@ type AnalyzeResponse = {
     bestPractices?: number;
     pwa?: number;
   };
+  pagespeed?: {
+    scores?: {
+      performance?: number;
+      seo?: number;
+      accessibility?: number;
+      bestPractices?: number;
+      pwa?: number;
+    };
+    metrics?: {
+      lcpMs?: number | null;
+      cls?: number | null;
+      inpMs?: number | null;
+    };
+  };
   message?: string;
   error?: string;
 };
@@ -53,6 +67,19 @@ export default function Page() {
       setLoading(false);
     }
   }
+
+  // ✅ FIX: le card leggono prima da pagespeed.scores (dove arrivano davvero i valori)
+  const viewScores = useMemo(() => {
+    const ps = result?.pagespeed?.scores ?? {};
+    const top = result?.scores ?? {};
+    return {
+      performance: ps.performance ?? top.performance,
+      seo: ps.seo ?? top.seo,
+      accessibility: ps.accessibility ?? top.accessibility,
+      bestPractices: ps.bestPractices ?? top.bestPractices,
+      pwa: ps.pwa ?? top.pwa,
+    };
+  }, [result]);
 
   return (
     <div
@@ -126,28 +153,40 @@ export default function Page() {
             }}
           >
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "baseline" }}>
-              <div><b>Input:</b> {result.input}</div>
-              {result.finalUrl && <div><b>Final URL:</b> {result.finalUrl}</div>}
-              {typeof result.httpStatus === "number" && <div><b>Status:</b> {result.httpStatus}</div>}
-              {result.platform && <div><b>Platform:</b> {result.platform}</div>}
+              <div>
+                <b>Input:</b> {result.input}
+              </div>
+              {result.finalUrl && (
+                <div>
+                  <b>Final URL:</b> {result.finalUrl}
+                </div>
+              )}
+              {typeof result.httpStatus === "number" && (
+                <div>
+                  <b>Status:</b> {result.httpStatus}
+                </div>
+              )}
+              {result.platform && (
+                <div>
+                  <b>Platform:</b> {result.platform}
+                </div>
+              )}
             </div>
 
-            {result.scores && (
-              <div
-                style={{
-                  marginTop: 14,
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-                  gap: 10,
-                }}
-              >
-                <Score label="Performance" value={result.scores.performance} />
-                <Score label="SEO" value={result.scores.seo} />
-                <Score label="Accessibility" value={result.scores.accessibility} />
-                <Score label="Best Practices" value={result.scores.bestPractices} />
-                <Score label="PWA" value={result.scores.pwa} />
-              </div>
-            )}
+            <div
+              style={{
+                marginTop: 14,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                gap: 10,
+              }}
+            >
+              <Score label="Performance" value={viewScores.performance} />
+              <Score label="SEO" value={viewScores.seo} />
+              <Score label="Accessibility" value={viewScores.accessibility} />
+              <Score label="Best Practices" value={viewScores.bestPractices} />
+              <Score label="PWA" value={viewScores.pwa} />
+            </div>
 
             <details style={{ marginTop: 14 }}>
               <summary style={{ cursor: "pointer" }}>Risposta completa (JSON)</summary>
